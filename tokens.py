@@ -1,4 +1,5 @@
 import ply.lex as lex
+import time
 
 reserved = {
     'if': 'IF',
@@ -10,13 +11,29 @@ reserved = {
 tokens = [
              # Define your tokens here, e.g., NUMBER, STRING, IDENTIFIER, KEYWORDS:
              'NUMBER',
+             'FLOAT',
              'STRING',
              'PLUS',
              'MINUS',
              'DIVIDE',
              'MULTIPLY',
+             'MODULO',
              'LPAREN',
              'RPAREN',
+             'LBRACE',
+             'RBRACE',
+             'BLOCKSTART',
+             'BLOCKEND',
+             'NOT',
+             'EQUALS',
+             'LT',
+             'GT',
+             'LTE',
+             'GTE',
+             'DOUBLEEQUAL',
+             'NE',
+             'AND',
+             'OR',
              'ID',
              'COMMENT'
          ] + list(reserved.values())
@@ -41,20 +58,41 @@ t_MULTIPLY = r'\*'
 t_DIVIDE = r'/'
 t_LPAREN = r'\('
 t_RPAREN = r'\)'
-
+t_MODULO = r'%'
+t_LBRACE = r'\['
+t_RBRACE = r'\]'
+t_BLOCKSTART = r'\{'
+t_BLOCKEND = r'\}'
+t_NOT = r'\~'
+t_EQUALS = r'\='
+t_GT = r'\>'
+t_LT = r'\<'
+t_LTE = r'\<\='
+t_GTE = r'\>\='
+t_DOUBLEEQUAL = r'\=\='
+t_NE = r'\!\='
+t_AND = r'\&'
+t_OR = r'\|'
+t_STRING = r'\w'
 
 # ... regular expressions for other tokens
 
 # A regular expression rule with some action code:
+num_count = 0
+
+
 def t_NUMBER(t):
     r'\d+'
+    global num_count
+    num_count += 1
     t.value = int(t.value)
     return t
 
 
-def t_STRING(t):
-    r'\b\w+\b'
-    t.value = str(t.value)
+def t_FLOAT(t):
+    r'(\d*\.\d+)|(\d+\.\d*)'
+    t.value = float(t.value)
+    return t
 
 
 # Define a rule so we can track line numbers:
@@ -85,14 +123,33 @@ def t_error(t):
 lexer = lex.lex()
 
 # Test it out:
-data = '''3 + 4 * 10 + -20 * 2'''
+data = '''[25/(3*40) + {300-20} -16.5]
+{(300-250)<(400-500)}
+20 & 30 | 50
+hello world
+# This is a comment'''
 
 # Give the lexer some input:
 lexer.input(data)
+
+# Start the timer before tokenization
+start_time = time.time()
 
 # Tokenize:
 while True:
     tok = lexer.token()
     if not tok:
         break  # No more input
-    print(tok.type, tok.value, tok.lineno, tok.lexpos)
+    print(f"token_type: {tok.type}, token_value: {tok.value}, token_line_number: {tok.lineno}, "
+          f"token_lex_position: {tok.lexpos}")
+    print(f"num_count: {num_count}")
+
+# Stop the timer after tokenization
+end_time = time.time()
+
+# Calculate elapsed time
+elapsed_time = end_time - start_time
+
+# Print the elapsed time
+print(f"\nCompilation time: {elapsed_time:.4f} seconds")
+
